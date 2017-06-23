@@ -181,6 +181,7 @@ pub type Result<T> = ::std::result::Result<T, Error>;
 ///
 /// Note that when following symbolic/soft links, loops are detected and an
 /// error is reported.
+#[derive(Debug)]
 pub struct WalkDir {
     opts: WalkDirOptions,
     root: PathBuf,
@@ -193,6 +194,22 @@ struct WalkDirOptions {
     max_depth: usize,
     sorter: Option<Box<FnMut(&OsString,&OsString) -> Ordering + 'static>>,
     contents_first: bool,
+}
+
+impl fmt::Debug for WalkDirOptions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "WalkDirOptions {{ follow_links: {}, max_open: {}, min_depth: {}, \
+                   max_depth: {}, sorter_present: {}, contents_first: {} }}",
+            self.follow_links,
+            self.max_open,
+            self.min_depth,
+            self.max_depth,
+            self.sorter.is_some(),
+            self.contents_first
+        )
+    }
 }
 
 impl WalkDir {
@@ -306,11 +323,11 @@ impl WalkDir {
         self
     }
 
-    /// Yield a directory's contents before the directory itself. By default, 
+    /// Yield a directory's contents before the directory itself. By default,
     /// this is disabled.
     ///
-    /// When `yes` is `false` (as is the default), the directory is yielded 
-    /// before its contents are read. This is useful when, e.g. you want to 
+    /// When `yes` is `false` (as is the default), the directory is yielded
+    /// before its contents are read. This is useful when, e.g. you want to
     /// skip processing of some directories.
     ///
     /// When `yes` is `true`, the iterator yields the contents of a directory
@@ -433,6 +450,7 @@ pub trait WalkDirIterator: Iterator {
 /// descriptors and whether the iterator should follow symbolic links.
 ///
 /// The order of elements yielded by this iterator is unspecified.
+#[derive(Debug)]
 pub struct Iter {
     /// Options specified in the builder. Depths, max fds, etc.
     opts: WalkDirOptions,
@@ -458,7 +476,7 @@ pub struct Iter {
     /// The current depth of iteration (the length of the stack at the
     /// beginning of each iteration).
     depth: usize,
-    /// A list of DirEntries corresponding to directories, that are 
+    /// A list of DirEntries corresponding to directories, that are
     /// yielded after their contents has been fully yielded. This is only
     /// used when `contents_first` is enabled.
     deferred_dirs: Vec<DirEntry>,
@@ -470,6 +488,7 @@ pub struct Iter {
 /// open, future entries are read by iterating over the raw `fs::ReadDir`.
 /// When closed, all future entries are read into memory. Iteration then
 /// proceeds over a `Vec<fs::DirEntry>`.
+#[derive(Debug)]
 enum DirList {
     /// An opened handle.
     ///
@@ -587,7 +606,7 @@ impl Iter {
             None
         } else {
             if self.skippable() { None } else { Some(Ok(dent)) }
-        } 
+        }
     }
 
     fn get_deferred_dir(&mut self) -> Option<DirEntry> {
@@ -884,6 +903,7 @@ impl fmt::Debug for DirEntry {
 ///
 /// Type parameter `I` refers to the underlying iterator and `P` refers to the
 /// predicate, which is usually `FnMut(&DirEntry) -> bool`.
+#[derive(Debug)]
 pub struct IterFilterEntry<I, P> {
     it: I,
     predicate: P,
